@@ -1,5 +1,6 @@
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 from xlsx_to_csv import transform_xlsx_to_csv
 
@@ -59,7 +60,8 @@ def main():
     if args.output:
         output_file = Path(args.output)
     else:
-        output_file = data_dir / "data.csv"
+        today = date.today().strftime("%Y-%m-%d")
+        output_file = data_dir / f"{today} data.csv"
 
     print(f"Input file:  {input_file}")
     print(f"Output file: {output_file}")
