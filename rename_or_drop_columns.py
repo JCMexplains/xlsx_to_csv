@@ -2,56 +2,64 @@ import re
 
 import pandas as pd
 
-
-def camel_to_snake(name):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1)
-    return s2.lower().replace(" ", "_").replace("__", "_")
-
-
 def process_dataframe(df):
-    # Strip whitespace from column names and convert to snake_case
-    df.columns = [camel_to_snake(col.strip()) for col in df.columns]
 
-    column_mapping = {
-        "act_cntct_hrs": None,
-        "bldg": "building",
-        "campus": "campus",
-        "campus_code": None,
-        "class_title": None,
-        "cls_max": None,
-        "cost_center": None,
-        "course_description": None,
-        "course_id": "course_id",
-        "credit_hrs": None,
-        "credit_type": None,
-        "days": "days",
-        "department": "department",
-        "designators": None,
-        "division": "division",
-        "end": "end_time",
-        "enrolled": None,
-        "enr/_max": None,
-        "f/p/e": None,
-        "fees": None,
-        "fte": None,
-        "grades": None,
-        "grades_entered": None,
-        "instructor_name": "instructor_name",
-        "max/_cap": None,
-        "outlier": None,
-        "paid": None,
-        "paid_fte": None,
-        "pay": None,
-        "pd/_enr": None,
-        "ref_num": "reference_number",
-        "rm_cap": "room_cap",
-        "rm_#": "room_number",
-        "schedule_notes": None,
-        "sess": "session",
-        "start": "start_time",
-        "std_cntct_hrs": None,
-        "term": "term",
+
+    column_mapping = { 
+        "Course ID": "course_id",
+        "RefNum": "reference_number",
+        "F/P/E": None,
+        "Pay": None,
+        "Instructor Name": "instructor_name",
+        "Sess": "session",
+        "Start": "start_time",
+        "End": "end_time",
+        "Days": "days",
+        "Bldg": "building",
+        "Rm #": "room_number",
+        "Rm Cap": "room_cap",
+        "Cls Max": None,
+        "Enrolled": None,
+        "Paid": None,
+        "Outlier": None,
+        "Class Title": None,
+        "Delivery Method": None,
+        "Designators": None,
+        "ZT": None,
+        "Fees": None,
+        "FTE": None,
+        "Paid FTE": None,
+        "Credit Hrs": None,
+        "Act Cntct Hrs": None,
+        "Std Cntct Hrs": None,
+        "Campus": "campus",
+        "Campus Code": None,
+        "Division": "division",
+        "Department": "department",
+        "Cost Center": None,
+        "Credit Type": None,
+        "Term": "term",
+        "Schedule Notes": None,
+        "Course Description": None,
+        "Curriculum.Primary Instructor Type": None,
+        "Curriculum.Campus": None,
+        "Curriculum.Course Pathway": None,
+        "Curriculum.Division Department": None,
+        "Curriculum.ICS Code": None,
+        "Curriculum.Class Status": None,
+        "Gen Ed": None,
+        "SummaryKey": None,
+        "Curriculum.Course Id Prefix": None,
+        "Curriculum.Primary Instructor Id": None,
+        "Curriculum.BC Course Discipline": None,
+        "FPE": None,
+        "CourseTermKey": None,
+        "Random": None,
+        "Sort": None,
+        "Curriculum.Primary Instructor Job Profile": None,
+        "ClassFilter": None,
+        "Curriculum.Credit Non Credit Vocational": None,
+        "Curriculum.Internal Job Classification": None
     }
 
     # Rename columns (only for existing columns)

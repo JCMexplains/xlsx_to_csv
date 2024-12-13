@@ -62,6 +62,12 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
     # Read the Excel file
     df = pd.read_excel(input_file)
 
+    # Debug: Print actual columns
+    print("\nActual columns in Excel file:")
+    for col in df.columns:
+        print(f"  '{col}'")
+    print("\n")
+
     # Process the DataFrame (rename/drop columns)
     df = process_dataframe(df)
 
