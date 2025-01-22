@@ -62,7 +62,11 @@ def process_dataframe(df):
         "Curriculum.Internal Job Classification": None
     }
 
-    # Rename columns (only for existing columns)
+    # Drop columns that aren't in our mapping dictionary
+    columns_to_drop = [col for col in df.columns if col not in column_mapping]
+    df = df.drop(columns=columns_to_drop)
+
+    # Rename columns (only for existing columns that have a new name)
     df = df.rename(
         columns={
             col: new_name
@@ -70,14 +74,6 @@ def process_dataframe(df):
             if col in df.columns and new_name is not None
         }
     )
-
-    # Drop columns (only existing columns that are mapped to None)
-    columns_to_drop = [
-        col
-        for col in df.columns
-        if col in column_mapping and column_mapping[col] is None
-    ]
-    df = df.drop(columns=columns_to_drop)
 
     # Sort the columns alphabetically
     df = df.reindex(sorted(df.columns), axis=1)
