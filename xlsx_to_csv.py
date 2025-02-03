@@ -32,7 +32,19 @@ def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -
     preview_df = pd.read_excel(excel_file, nrows=20)
     expected_columns_lower = set(col.lower() for col in expected_columns)
     
-    # Check each row for matches
+    # First check if the default header row (row 0) matches
+    header_values = preview_df.columns.astype(str).str.strip().str.lower()
+    matches = expected_columns_lower.intersection(header_values)
+    
+    logger.info(f"Header row: found {len(matches)} matches")
+    if matches:
+        logger.info(f"Matched columns: {matches}")
+    
+    if len(matches) >= len(expected_columns) * 0.5:
+        logger.info("Using default header row")
+        return 0
+        
+    # If header row doesn't match, check each subsequent row
     for idx in range(len(preview_df)):
         row_values = preview_df.iloc[idx].astype(str).str.strip().str.lower()
         matches = expected_columns_lower.intersection(row_values)
@@ -42,8 +54,8 @@ def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -
             logger.info(f"Matched columns: {matches}")
         
         if len(matches) >= len(expected_columns) * 0.5:
-            logger.info(f"Found header row at index {idx}")
-            return idx
+            logger.info(f"Found header row at index {idx + 1}")  # Add 1 to get correct physical row number
+            return idx + 1  # Return physical row number
     
     raise ValueError(f"No header row found with expected columns: {expected_columns}")
 
