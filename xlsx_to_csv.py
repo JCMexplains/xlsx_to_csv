@@ -6,7 +6,6 @@ from typing import Tuple, Optional
 
 from config import COLUMN_MAPPING, INTEGER_COLUMNS, TEXT_COLUMNS, TIME_COLUMNS
 from skip_junk_rows import find_header_row
-from rename_or_drop_columns import process_dataframe, column_mapping
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 import logging

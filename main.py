@@ -3,8 +3,7 @@ import logging
 import sys
 from datetime import date
 from pathlib import Path
-
-from xlsx_to_csv import transform_xlsx_to_csv
+import xlsx_to_csv
 from config import EXCEL_PATTERN
 
 def setup_logging(verbose: bool) -> None:
@@ -59,7 +58,7 @@ def main():
         logging.info(f"Input file:  {input_file}")
         logging.info(f"Output file: {output_file}")
         
-        transform_xlsx_to_csv(input_file, output_file)
+        xlsx_to_csv.transform_xlsx_to_csv(input_file, output_file)
         logging.info("Conversion completed successfully!")
         
     except Exception as e:
