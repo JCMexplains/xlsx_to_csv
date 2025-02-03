@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 from config import COLUMN_MAPPING, INTEGER_COLUMNS, TEXT_COLUMNS, TIME_COLUMNS
-from skip_junk_rows import find_header_row
+import skip_junk_rows
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 import logging
@@ -94,11 +94,11 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> None:
     """Transform Excel file to CSV with data cleaning"""
     # Find header row and read data
-    header_row = find_header_row(input_file, list(COLUMN_MAPPING.keys()))
+    header_row = skip_junk_rows.find_header_row(input_file, list(COLUMN_MAPPING.keys()))
     df = pd.read_excel(input_file, header=header_row)
     
-    logging.debug(f"Initial dataframe shape: {df.shape}")
-    logging.debug(f"Columns found: {df.columns.tolist()}")
+    logging.info(f"Initial dataframe shape: {df.shape}")
+    logging.info(f"Columns found: {df.columns.tolist()}")
     
     # Process and save
     df = process_dataframe(df)

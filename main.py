@@ -1,5 +1,13 @@
-import argparse
 import logging
+
+# Set up logging configuration before any other imports
+logging.basicConfig(
+    level=logging.INFO,  # Set to logging.DEBUG for more detailed output
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+import argparse
 import sys
 from datetime import date
 from pathlib import Path
