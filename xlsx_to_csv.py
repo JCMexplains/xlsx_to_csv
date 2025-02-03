@@ -75,31 +75,28 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
     df = process_dataframe(df)
     logging.debug(f"After process_dataframe: {df.shape}")
 
-    # Ensure specific columns are integers
-    integer_columns = ["reference_number", "room_cap", "session", "term"]
-    for col in integer_columns:
+    def process_column(col: str, processor: callable, error_msg: str = None) -> None:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+            df[col] = processor(df[col])
         else:
-            print(f"Column '{col}' not found in the DataFrame")
+            print(error_msg or f"Column '{col}' not found in the DataFrame")
 
-    # trim campus, department, and division fields using regex
+    # Process integer columns
+    for col in ["reference_number", "room_cap", "session", "term"]:
+        process_column(col, lambda x: pd.to_numeric(x, errors="coerce").fillna(0).astype(int))
+
+    # Process text columns with regex
     for col in ["campus", "department", "division"]:
-        if col in df.columns:
-            df[col] = df[col].apply(lambda x: re.sub(r"\s.*$", "", str(x)))
-        else:
-            print(f"Column '{col}' not found in the DataFrame")
+        process_column(col, lambda x: x.apply(lambda y: re.sub(r"\s.*$", "", str(y))))
 
-    # Process room_number
-    if "room_number" in df.columns:
-        df["room_number"] = df["room_number"].apply(process_room_number)
-        df["room_number"] = pd.to_numeric(df["room_number"], errors="coerce").astype(
-            "Int64"
-        )
-    else:
-        print("Warning: 'room_number' column not found in DataFrame")
+    # Process room number
+    process_column(
+        "room_number",
+        lambda x: pd.to_numeric(x.apply(process_room_number), errors="coerce").astype("Int64"),
+        "Warning: 'room_number' column not found in DataFrame"
+    )
 
-    # Convert 'start_time' and 'end_time' to time only (HH:MM format)
+    # Process time columns
     def format_time(x):
         if pd.isna(x) or x == "TBA":
             return x
@@ -109,11 +106,9 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
             return x
 
     for col in ["start_time", "end_time"]:
-        if col in df.columns:
-            df[col] = df[col].apply(format_time)
-        else:
-            print(f"Column '{col}' not found in the DataFrame")
+        process_column(col, lambda x: x.apply(format_time))
 
+    # Process dates
     date_pairs = df.apply(lambda row: get_dates(row["term"], row["session"]), axis=1)
     # print("Debug: date_pairs =", date_pairs)
     if not date_pairs.empty:
