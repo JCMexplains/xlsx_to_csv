@@ -4,7 +4,9 @@ import logging
 from datetime import date
 from pathlib import Path
 from xlsx_to_csv import transform_xlsx_to_csv
-import ipdb; ipdb.set_trace()  # Add this where you want to start debugging
+import ipdb
+
+# ipdb.set_trace()  # Add this where you want to start debugging
 
 
 def setup_argparser() -> argparse.ArgumentParser:
@@ -21,7 +23,7 @@ def setup_argparser() -> argparse.ArgumentParser:
         "-o",
         "--output",
         type=str,
-        help="Output CSV file path. If not provided, will save as data.csv in the data directory.",
+        help="Output CSV file path. If not provided, will save as [current date] data.csv in the data directory.",
     )
     parser.add_argument(
         "-v",
