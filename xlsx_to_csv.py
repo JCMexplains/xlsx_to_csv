@@ -7,7 +7,6 @@ from rename_or_drop_columns import process_dataframe, column_mapping
 
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
-from drop_rows import drop_rows
 import logging
 
 
@@ -99,9 +98,6 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
         )
     else:
         print("Warning: 'room_number' column not found in DataFrame")
-
-    # Call drop_rows function from drop_rows.py
-    df = drop_rows(df)
 
     # Convert 'start_time' and 'end_time' to time only (HH:MM format)
     def format_time(x):
