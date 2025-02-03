@@ -2,11 +2,12 @@ import re
 import warnings
 import pandas as pd
 from pathlib import Path
+from skip_junk_rows import find_header_row
+from rename_or_drop_columns import process_dataframe, column_mapping
 
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 from drop_rows import drop_rows
-from rename_or_drop_columns import process_dataframe
 
 
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -54,13 +55,14 @@ def process_room_number(room: str | float | int) -> int | None:
 
 
 def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> None:
-    # Suppress the warning that we don't have a default style sheet
-    warnings.filterwarnings(
-        "ignore", category=UserWarning, module="openpyxl.styles.stylesheet"
-    )
-
-    # Read the Excel file
-    df = pd.read_excel(input_file)
+    # Get the expected column names directly from the imported mapping
+    expected_columns = list(column_mapping.keys())
+    
+    # Find the actual header row
+    header_row = find_header_row(input_file, expected_columns)
+    
+    # Read the Excel file starting from the identified header row
+    df = pd.read_excel(input_file, header=header_row)
 
     # Debug: Print actual columns
     print("\nActual columns in Excel file:")

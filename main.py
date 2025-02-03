@@ -6,8 +6,6 @@ from pathlib import Path
 from xlsx_to_csv import transform_xlsx_to_csv
 import ipdb
 
-# ipdb.set_trace()  # Add this where you want to start debugging
-
 
 def setup_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -86,9 +84,8 @@ def main():
     logging.info(f"Output file: {output_file}")
 
     try:
-        import ipdb; ipdb.set_trace()  # Debugger will start here
+        # ipdb.set_trace()  # Debugger will start here
         transform_xlsx_to_csv(input_file, output_file)
-        logging.info("Conversion completed successfully!")
     except Exception as e:
         logging.error(f"Error during conversion: {str(e)}")
         sys.exit(1)

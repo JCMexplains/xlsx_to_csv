@@ -1,26 +1,26 @@
 import re
-
 import pandas as pd
 
+# Move column_mapping outside the function
+column_mapping = { 
+    "Bldg": "building",
+    "Campus": "campus",
+    "Course ID": "course_id",
+    "Days": "days",
+    "Department": "department",
+    "Designators": "designators",
+    "Division": "division",
+    "End": "end_time",
+    "Instructor Name": "instructor_name",
+    "RefNum": "reference_number",
+    "Rm #": "room_number",
+    "Rm Cap": "room_cap",
+    "Sess": "session",
+    "Start": "start_time",
+    "Term": "term"
+}
+
 def process_dataframe(df):
-
-
-    column_mapping = { 
-        "Course ID": "course_id",
-        "RefNum": "reference_number",
-        "Instructor Name": "instructor_name",
-        "Sess": "session",
-        "Start": "start_time",
-        "End": "end_time",
-        "Days": "days",
-        "Bldg": "building",
-        "Rm #": "room_number",
-        "Rm Cap": "room_cap",
-        "Campus": "campus",
-        "Division": "division",
-        "Department": "department",
-        "Term": "term"
-    }
 
     # Drop columns that aren't in our mapping dictionary
     columns_to_drop = [col for col in df.columns if col not in column_mapping]
