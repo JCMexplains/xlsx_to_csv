@@ -9,6 +9,8 @@ import logging
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 
+# Create a logger for this module
+logger = logging.getLogger(__name__)
 
 def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -> int:
     """
@@ -24,7 +26,7 @@ def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -
     Raises:
         ValueError: If no header row is found containing at least 50% of expected columns
     """
-    logging.debug(f"Looking for header row with expected columns: {expected_columns}")
+    logger.debug(f"Looking for header row with expected columns: {expected_columns}")
     
     # Read first 20 rows
     preview_df = pd.read_excel(excel_file, nrows=20)
@@ -35,12 +37,12 @@ def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -
         row_values = preview_df.iloc[idx].astype(str).str.strip().str.lower()
         matches = expected_columns_lower.intersection(row_values)
         
-        logging.debug(f"Row {idx}: found {len(matches)} matches")
+        logger.info(f"Row {idx}: found {len(matches)} matches")
         if matches:
-            logging.debug(f"Matched columns: {matches}")
+            logger.info(f"Matched columns: {matches}")
         
         if len(matches) >= len(expected_columns) * 0.5:
-            logging.info(f"Found header row at index {idx}")
+            logger.info(f"Found header row at index {idx}")
             return idx
     
     raise ValueError(f"No header row found with expected columns: {expected_columns}")
@@ -130,12 +132,12 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
     """Transform Excel file to CSV with data cleaning"""
     # Find header row and read data
     header_row = find_header_row(input_file, list(COLUMN_MAPPING.keys()))
-    df = pd.read_excel(input_file, header=header_row)
+    df = pd.read_excel(input_file, skiprows=header_row)
     
-    logging.info(f"Initial dataframe shape: {df.shape}")
-    logging.info(f"Columns found: {df.columns.tolist()}")
+    logger.info(f"Initial dataframe shape: {df.shape}")
+    logger.info(f"Columns found: {df.columns.tolist()}")
     
     # Process and save
     df = process_dataframe(df)
     df.to_csv(output_file, index=False)
-    logging.info(f"Successfully transformed {input_file} to {output_file}")
+    logger.info(f"Successfully transformed {input_file} to {output_file}")
