@@ -55,14 +55,14 @@ def main():
         input_file = get_input_file(args.input, data_dir)
         output_file = get_output_file(args.output, data_dir)
         
-        logging.info(f"Input file:  {input_file}")
-        logging.info(f"Output file: {output_file}")
+        # logging.info(f"Input file:  {input_file}")
+        # logging.info(f"Output file: {output_file}")
         
         xlsx_to_csv.transform_xlsx_to_csv(input_file, output_file)
-        logging.info("Conversion completed successfully!")
+        # logging.info("Conversion completed successfully!")
         
     except Exception as e:
-        logging.error(f"Error during conversion: {str(e)}")
+        logging.error(f"Error during conversion in {__name__}.{sys._getframe().f_code.co_name}: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
