@@ -14,13 +14,6 @@ from pathlib import Path
 import xlsx_to_csv
 from config import EXCEL_PATTERN
 
-def setup_logging(verbose: bool) -> None:
-    """Configure logging based on verbosity"""
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
-
 def get_input_file(input_path: str | None, data_dir: Path) -> Path:
     """Determine input file path"""
     if input_path:
@@ -49,11 +42,7 @@ def main():
     )
     parser.add_argument("-i", "--input", help="Input Excel file path")
     parser.add_argument("-o", "--output", help="Output CSV file path")
-    parser.add_argument("-v", "--verbose", action="store_true", 
-                       help="Enable verbose logging")
     args = parser.parse_args()
-
-    setup_logging(args.verbose)
     
     try:
         current_dir = Path(__file__).parent

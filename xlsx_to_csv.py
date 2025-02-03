@@ -2,13 +2,48 @@ import re
 import warnings
 import pandas as pd
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Union
 
 from config import COLUMN_MAPPING, INTEGER_COLUMNS, TEXT_COLUMNS, TIME_COLUMNS
-import skip_junk_rows
+import logging
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
-import logging
+
+
+def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -> int:
+    """
+    Find the actual header row in an Excel file by looking for expected column names.
+    
+    Args:
+        excel_file: Path or string pointing to the Excel file to read
+        expected_columns: List of column names to look for in the header row
+        
+    Returns:
+        int: The index of the header row
+        
+    Raises:
+        ValueError: If no header row is found containing at least 50% of expected columns
+    """
+    logging.debug(f"Looking for header row with expected columns: {expected_columns}")
+    
+    # Read first 20 rows
+    preview_df = pd.read_excel(excel_file, nrows=20)
+    expected_columns_lower = set(col.lower() for col in expected_columns)
+    
+    # Check each row for matches
+    for idx in range(len(preview_df)):
+        row_values = preview_df.iloc[idx].astype(str).str.strip().str.lower()
+        matches = expected_columns_lower.intersection(row_values)
+        
+        logging.debug(f"Row {idx}: found {len(matches)} matches")
+        if matches:
+            logging.debug(f"Matched columns: {matches}")
+        
+        if len(matches) >= len(expected_columns) * 0.5:
+            logging.info(f"Found header row at index {idx}")
+            return idx
+    
+    raise ValueError(f"No header row found with expected columns: {expected_columns}")
 
 
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -94,7 +129,7 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> None:
     """Transform Excel file to CSV with data cleaning"""
     # Find header row and read data
-    header_row = skip_junk_rows.find_header_row(input_file, list(COLUMN_MAPPING.keys()))
+    header_row = find_header_row(input_file, list(COLUMN_MAPPING.keys()))
     df = pd.read_excel(input_file, header=header_row)
     
     logging.info(f"Initial dataframe shape: {df.shape}")
@@ -104,35 +139,3 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
     df = process_dataframe(df)
     df.to_csv(output_file, index=False)
     logging.info(f"Successfully transformed {input_file} to {output_file}")
-
-
-if __name__ == "__main__":
-    current_dir = Path(__file__).parent
-    data_dir = current_dir / "data"
-
-    # Check if data directory exists, fail if it doesn't
-    if not data_dir.exists():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
-
-    print(f"Looking for Excel files in: {data_dir}")
-
-    # Find all xlsx files that start with "data"
-    xlsx_files = list(data_dir.glob("data*.xlsx"))
-
-    if not xlsx_files:
-        print("No data*.xlsx files found!")
-        print(
-            "Please place your Excel file (named 'data.xlsx' or similar) in the following directory:"
-        )
-        print(f"  {data_dir}")
-        exit(1)
-
-    # Take the first matching file
-    input_xlsx = xlsx_files[0]
-    output_csv = data_dir / "data.csv"
-
-    print(f"Found Excel file: {input_xlsx}")
-    print(f"Will save CSV to: {output_csv}")
-
-    transform_xlsx_to_csv(input_xlsx, output_csv)
-    print("Conversion completed successfully!")
