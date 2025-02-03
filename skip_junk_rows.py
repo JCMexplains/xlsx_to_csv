@@ -37,5 +37,6 @@ def find_header_row(excel_file, expected_columns):
             logging.info(f"Found header row at index {idx} with {match_count} matching columns")
             return idx
     
-    logging.warning("No good header row match found, defaulting to first row")
-    return 0 
+    error_msg = f"Could not find header row containing at least 50% of expected columns: {expected_columns}"
+    logging.error(error_msg)
+    raise ValueError(error_msg) 
