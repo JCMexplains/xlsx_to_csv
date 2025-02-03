@@ -8,6 +8,7 @@ from rename_or_drop_columns import process_dataframe, column_mapping
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 from drop_rows import drop_rows
+import logging
 
 
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -63,6 +64,7 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
     
     # Read the Excel file starting from the identified header row
     df = pd.read_excel(input_file, header=header_row)
+    logging.debug(f"After initial read: {df.shape}")
 
     # Debug: Print actual columns
     print("\nActual columns in Excel file:")
@@ -72,6 +74,7 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
 
     # Process the DataFrame (rename/drop columns)
     df = process_dataframe(df)
+    logging.debug(f"After process_dataframe: {df.shape}")
 
     # Ensure specific columns are integers
     integer_columns = ["reference_number", "room_cap", "session", "term"]

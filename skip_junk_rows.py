@@ -1,10 +1,20 @@
 import pandas as pd
 import logging
+from pathlib import Path
 
-def find_header_row(excel_file, expected_columns):
+def find_header_row(excel_file: str | Path, expected_columns: list[str]) -> int:
     """
     Find the actual header row in an Excel file by looking for expected column names.
-    Returns the index of the header row.
+    
+    Args:
+        excel_file: Path or string pointing to the Excel file to read
+        expected_columns: List of column names to look for in the header row
+        
+    Returns:
+        int: The index of the header row
+        
+    Raises:
+        ValueError: If no header row is found containing at least 50% of expected columns
     """
     logging.debug(f"Expected columns: {expected_columns}")
     
