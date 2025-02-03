@@ -30,11 +30,11 @@ def get_input_file(input_path: str | None, data_dir: Path) -> Path:
         )
     return xlsx_files[0]
 
-def get_output_file(output_path: str | None, data_dir: Path) -> Path:
+def get_output_file(output_path: str | None, data_dir: Path, input_file: Path) -> Path:
     """Determine output file path"""
     if output_path:
         return Path(output_path)
-    return data_dir / f"{date.today().strftime('%Y-%m-%d')} data.csv"
+    return data_dir / f"{date.today().strftime('%Y-%m-%d')} {input_file.stem}.csv"
 
 def main():
     parser = argparse.ArgumentParser(
@@ -50,7 +50,7 @@ def main():
         data_dir.mkdir(exist_ok=True)
         
         input_file = get_input_file(args.input, data_dir)
-        output_file = get_output_file(args.output, data_dir)
+        output_file = get_output_file(args.output, data_dir, input_file)
         
         logging.getLogger(__name__).debug(f"Input file:  {input_file}")
         logging.getLogger(__name__).debug(f"Output file: {output_file}")
