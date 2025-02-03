@@ -2,9 +2,11 @@ import re
 import warnings
 import pandas as pd
 from pathlib import Path
+from typing import Tuple, Optional
+
+from config import COLUMN_MAPPING, INTEGER_COLUMNS, TEXT_COLUMNS, TIME_COLUMNS
 from skip_junk_rows import find_header_row
 from rename_or_drop_columns import process_dataframe, column_mapping
-
 
 from term_session_dates import TERM_SESSION_DATES, get_dates
 import logging
@@ -21,82 +23,18 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def process_room_number(room: str | float | int) -> int | None:
-    """
-    This function does two things: it ensures that a string or float is converted to an integer, and it removes the final digit if it is 0.
-
-    All the room numbers from CID are padded with a final 0, which we want to remove.
-
-    Args:
-        room: str | float | int: The input room number, which can be a string, float, or integer.
-
-    Returns:
-        int | None: The processed room number as an integer, or None if the input is invalid or cannot be processed.
-
-    Examples:
-        >>> process_room_number("103")
-        103
-        >>> process_room_number(10.0)
-        1
-        >>> process_room_number("invalid")
-        None
-    """
-    if pd.isna(room):
-        return None
-    try:
-        room_float = float(room)
-        room_int = int(room_float)
-        if room_int % 10 == 0 and room_int != 0:
-            return room_int // 10
-        else:
-            return room_int
-    except ValueError:
-        return None
+def process_integer_column(series: pd.Series) -> pd.Series:
+    """Convert a series to integers, handling errors gracefully"""
+    return pd.to_numeric(series, errors="coerce").fillna(0).astype(int)
 
 
-def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> None:
-    # Get the expected column names directly from the imported mapping
-    expected_columns = list(column_mapping.keys())
-    
-    # Find the actual header row
-    header_row = find_header_row(input_file, expected_columns)
-    
-    # Read the Excel file starting from the identified header row
-    df = pd.read_excel(input_file, header=header_row)
-    logging.debug(f"After initial read: {df.shape}")
+def process_text_column(series: pd.Series) -> pd.Series:
+    """Clean text columns by removing trailing text after spaces"""
+    return series.apply(lambda x: re.sub(r"\s.*$", "", str(x)))
 
-    # Debug: Print actual columns
-    print("\nActual columns in Excel file:")
-    for col in df.columns:
-        print(f"  '{col}'")
-    print("\n")
 
-    # Process the DataFrame (rename/drop columns)
-    df = process_dataframe(df)
-    logging.debug(f"After process_dataframe: {df.shape}")
-
-    def process_column(col: str, processor: callable, error_msg: str = None) -> None:
-        if col in df.columns:
-            df[col] = processor(df[col])
-        else:
-            print(error_msg or f"Column '{col}' not found in the DataFrame")
-
-    # Process integer columns
-    for col in ["reference_number", "room_cap", "session", "term"]:
-        process_column(col, lambda x: pd.to_numeric(x, errors="coerce").fillna(0).astype(int))
-
-    # Process text columns with regex
-    for col in ["campus", "department", "division"]:
-        process_column(col, lambda x: x.apply(lambda y: re.sub(r"\s.*$", "", str(y))))
-
-    # Process room number
-    process_column(
-        "room_number",
-        lambda x: pd.to_numeric(x.apply(process_room_number), errors="coerce").astype("Int64"),
-        "Warning: 'room_number' column not found in DataFrame"
-    )
-
-    # Process time columns
+def process_time_column(series: pd.Series) -> pd.Series:
+    """Format time columns consistently"""
     def format_time(x):
         if pd.isna(x) or x == "TBA":
             return x
@@ -104,28 +42,69 @@ def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> No
             return pd.to_datetime(x).strftime("%H:%M")
         except:
             return x
+    return series.apply(format_time)
 
-    for col in ["start_time", "end_time"]:
-        process_column(col, lambda x: x.apply(format_time))
 
-    # Process dates
+def process_room_number(room: str | float | int) -> Optional[int]:
+    """Process room numbers, removing trailing zeros"""
+    if pd.isna(room):
+        return None
+    try:
+        room_int = int(float(room))
+        return room_int // 10 if room_int % 10 == 0 and room_int != 0 else room_int
+    except ValueError:
+        return None
+
+
+def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Process the dataframe by applying all necessary transformations"""
+    # Drop and rename columns
+    df = df.drop(columns=[col for col in df.columns if col not in COLUMN_MAPPING])
+    df = df.rename(columns={col: new_name for col, new_name in COLUMN_MAPPING.items() 
+                          if col in df.columns})
+
+    # Process different column types
+    for col in INTEGER_COLUMNS:
+        if col in df.columns:
+            df[col] = process_integer_column(df[col])
+
+    for col in TEXT_COLUMNS:
+        if col in df.columns:
+            df[col] = process_text_column(df[col])
+
+    for col in TIME_COLUMNS:
+        if col in df.columns:
+            df[col] = process_time_column(df[col])
+
+    if "room_number" in df.columns:
+        df["room_number"] = pd.to_numeric(
+            df["room_number"].apply(process_room_number), 
+            errors="coerce"
+        ).astype("Int64")
+
+    # Add date columns
     date_pairs = df.apply(lambda row: get_dates(row["term"], row["session"]), axis=1)
-    # print("Debug: date_pairs =", date_pairs)
     if not date_pairs.empty:
-        df["start_date"], df["end_date"] = zip(
-            *[(pair if pair is not None else (None, None)) for pair in date_pairs]
-        )
-    else:
-        print("Warning: date_pairs is empty")
-        df["start_date"] = None
-        df["end_date"] = None
+        df["start_date"], df["end_date"] = zip(*[
+            pair if pair is not None else (None, None) for pair in date_pairs
+        ])
 
-    # Sort the columns alphabetically
-    # this puts start_date and end_date in the right place; the list was already sorted in rename_or_drop_columns.py
-    df = df.reindex(sorted(df.columns), axis=1)
+    return df.reindex(sorted(df.columns), axis=1)
 
-    # Write the transformed data to a CSV file
+
+def transform_xlsx_to_csv(input_file: str | Path, output_file: str | Path) -> None:
+    """Transform Excel file to CSV with data cleaning"""
+    # Find header row and read data
+    header_row = find_header_row(input_file, list(COLUMN_MAPPING.keys()))
+    df = pd.read_excel(input_file, header=header_row)
+    
+    logging.debug(f"Initial dataframe shape: {df.shape}")
+    logging.debug(f"Columns found: {df.columns.tolist()}")
+    
+    # Process and save
+    df = process_dataframe(df)
     df.to_csv(output_file, index=False)
+    logging.info(f"Successfully transformed {input_file} to {output_file}")
 
 
 if __name__ == "__main__":

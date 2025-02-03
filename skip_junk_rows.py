@@ -1,8 +1,9 @@
 import pandas as pd
 import logging
 from pathlib import Path
+from typing import List, Union
 
-def find_header_row(excel_file: str | Path, expected_columns: list[str]) -> int:
+def find_header_row(excel_file: Union[str, Path], expected_columns: List[str]) -> int:
     """
     Find the actual header row in an Excel file by looking for expected column names.
     
@@ -16,25 +17,23 @@ def find_header_row(excel_file: str | Path, expected_columns: list[str]) -> int:
     Raises:
         ValueError: If no header row is found containing at least 50% of expected columns
     """
-    logging.debug(f"Expected columns: {expected_columns}")
+    logging.debug(f"Looking for header row with expected columns: {expected_columns}")
     
+    # Read first 20 rows
     preview_df = pd.read_excel(excel_file, nrows=20)
+    expected_columns_lower = set(col.lower() for col in expected_columns)
     
+    # Check each row for matches
     for idx in range(len(preview_df)):
-        potential_headers = [str(h).strip() if pd.notna(h) else "" for h in preview_df.iloc[idx].values]
-        matches = [col for col in expected_columns if col in potential_headers]
+        row_values = preview_df.iloc[idx].astype(str).str.strip().str.lower()
+        matches = expected_columns_lower.intersection(row_values)
         
-        logging.debug(f"\nChecking row {idx}:")
-        logging.debug(f"Potential headers: {potential_headers}")
-        logging.debug(f"Found {len(matches)} matches out of {len(expected_columns)} expected columns")
-        
+        logging.debug(f"Row {idx}: found {len(matches)} matches")
         if matches:
             logging.debug(f"Matched columns: {matches}")
         
         if len(matches) >= len(expected_columns) * 0.5:
-            logging.info(f"Found header row at index {idx} with {len(matches)} matching columns")
+            logging.info(f"Found header row at index {idx}")
             return idx
     
-    error_msg = f"Could not find header row containing at least 50% of expected columns: {expected_columns}"
-    logging.error(error_msg)
-    raise ValueError(error_msg) 
+    raise ValueError(f"No header row found with expected columns: {expected_columns}")
