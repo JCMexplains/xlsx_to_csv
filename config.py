@@ -1,5 +1,6 @@
 # Configuration for column mapping and data processing
 COLUMN_MAPPING = {
+    "Act Cntct Hrs": "contact_hours",
     "Bldg": "building",
     "Campus": "campus",
     "Class Title": "class_title",
@@ -30,4 +31,4 @@ TEXT_COLUMNS = ["campus", "department", "division"]
 TIME_COLUMNS = ["start_time", "end_time"]
 
 # File patterns
-EXCEL_PATTERN = "data*.xlsx"
+EXCEL_PATTERN = "*data*.xlsx"
